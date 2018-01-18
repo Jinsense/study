@@ -14,7 +14,7 @@ private:
 	typedef struct st_FreeNode
 	{
 		st_MemoryBlock * pTopnode;
-		ULONG64 uniquenum;
+		LONG64 uniquenum;
 	}TOP;
 
 public:
@@ -35,7 +35,7 @@ public:
 			_pTop->pTopnode = pNode->pNextblock;
 			delete pNode;
 		}
-		_aligned_free(p_top_);
+		_aligned_free(_pTop);
 	}
 
 	DATA * Alloc()
@@ -48,22 +48,22 @@ public:
 		}
 		else
 		{
-			ULONG64 key = InterlockedIncrement64(&(_pTop->uniquenum));
+			LONG64 key = InterlockedIncrement64(&(_pTop->uniquenum));
 			TOP curtop;
 			TOP newtop;
 			DATA * pData;
 
 			do
 			{
-				curtop.uniquenum = pTop->uniquenum;
-				curtop.pTopnode = pTop->pTopnode;
+				curtop.uniquenum = _pTop->uniquenum;
+				curtop.pTopnode = _pTop->pTopnode;
 
 				newtop.uniquenum = key;
-				newtop.pTopnode = curtop.pTopnode;
+				newtop.pTopnode = curtop.pTopnode->pNextblock;
 
 				pData = &(curtop.pTopnode->data);
 
-			} while (!InterlockedCompareExchange128((volatile LONG64*)pTop, 
+			} while (!InterlockedCompareExchange128((volatile LONG64*)_pTop, 
 				(LONG64)newtop.uniquenum, (LONG64)newtop.pTopnode, (LONG64*)&curtop));
 			return pData;
 		}				
@@ -73,23 +73,30 @@ public:
 	{
 		TOP curtop;
 		TOP newtop;
-		ULONG64 key = InterlockedIncrement64(&(pTop->uniquenum));
+		LONG64 key = InterlockedIncrement64(&(_pTop->uniquenum));
 		do
 		{
+			curtop.uniquenum = _pTop->uniquenum;
+			curtop.pTopnode = _pTop->pTopnode;
 
-		} while (!InterlockedCompareExchange128((volatile LONG64*)pTop,
+			newtop.uniquenum = key;
+			newtop.pTopnode = (BLOCK*)((char*)pInData - sizeof(BLOCK*));
+
+			newtop.pTopnode->pNextblock = curtop.pTopnode;
+
+		} while (!InterlockedCompareExchange128((volatile LONG64*)_pTop,
 			(LONG64)newtop.uniquenum, (LONG64)newtop.pTopnode, (LONG64*)&curtop));
 		InterlockedDecrement64(&_usecount);
 		return;
 	}
 
-	ULONG64 GetUseCount() { return _usecount; }
-	ULONG64 GetAllocCount() { return _alloccount; }
+	LONG64 GetUseCount() { return _usecount; }
+	LONG64 GetAllocCount() { return _alloccount; }
 
 private:
 	TOP * _pTop;
-	ULONG64 _usecount;
-	ULONG64 _alloccount;
+	LONG64 _usecount;
+	LONG64 _alloccount;
 };
 
 //	Inline 함수로 작성했을 때와 아닐 때의 속도 비교 해보고
