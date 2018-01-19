@@ -18,14 +18,13 @@ private:
 	typedef struct st_FreeNode
 	{
 		st_MemoryBlock * pTopnode;
-		LONG uniquenum;
+		LONG64 uniquenum;
 	}TOP;
 
 public:
 	CLockfreeStack()
 	{
 		_stackusecount = 0;
-		_stackerror = 0;
 		_stackmemorypool = new CMemoryPool<BLOCK>;
 
 		_pTop = (TOP*)_aligned_malloc(sizeof(TOP), 16);
@@ -48,6 +47,7 @@ public:
 	void Push(DATA InData)
 	{
 		BLOCK * pNewnode = _stackmemorypool->Alloc();
+		new (pNewnode) BLOCK();
 		TOP curtop;
 		TOP newtop;
 		LONG64 key = InterlockedIncrement64(&(_pTop->uniquenum));
@@ -73,7 +73,6 @@ public:
 		if (InterlockedDecrement64(&_stackusecount) < 0)
 		{
 			InterlockedIncrement64(&_stackusecount);
-			InterlockedIncrement64(&_stackerror);
 			OutData = nullptr;
 			return;
 		}
@@ -106,6 +105,5 @@ public:
 private:
 	CMemoryPool<BLOCK> * _stackmemorypool;
 	TOP * _pTop;
-	LONG _stackusecount;
-	LONG _stackerror;
+	LONG64 _stackusecount;
 };

@@ -1,6 +1,8 @@
 #include <iostream>
 #include <conio.h>
 #include "MemoryPool.h"
+#include "LockfreeStack.h"
+#include "LockfreeQueue.h"
 #include "CDump.h"
 #include "Profiling.h"
 
@@ -18,9 +20,11 @@ struct TestData
 bool	g_Shutdown = false;
 
 CMemoryPool<TestData> g_Pool;
+CLockfreeStack<TestData*> g_LFStack;
+//	CLockfreeQueue<TestData*> g_LFQueue;
 
 
-unsigned __stdcall ThreadF(void * Param)
+unsigned __stdcall MemoryPool_Test(void * Param)
 {
 	TestData * pDataArray[TEST_MAX];
 	while (!g_Shutdown)
@@ -75,48 +79,159 @@ unsigned __stdcall ThreadF(void * Param)
 	}
 	return 0;
 }
+unsigned __stdcall LFStack_Test(void * Param)
+{
+	TestData * pDataArray[TEST_MAX];
+	while (!g_Shutdown)
+	{
+		for (auto i = 0; i < TEST_MAX; i++)
+		{
+			g_LFStack.Pop(pDataArray[i]);
+		}
+		Sleep(10);
+		for (auto i = 0; i < TEST_MAX; i++)
+		{
+			if (pDataArray[i]->Data == 0x00000000ffffffff && pDataArray[i]->Count == 0)
+				continue;
+			else
+				CCrashDump::Crash();
+		}
+		Sleep(10);
+		for (auto i = 0; i < TEST_MAX; i++)
+		{
+			InterlockedIncrement64(&(pDataArray[i]->Data));
+			InterlockedIncrement64(&(pDataArray[i]->Count));
+		}
+		Sleep(10);
+		for (auto i = 0; i < TEST_MAX; i++)
+		{
+			if (pDataArray[i]->Data == 0x0000000100000000 && pDataArray[i]->Count == 1)
+				continue;
+			else
+				CCrashDump::Crash();
+		}
+		Sleep(10);
+		for (auto i = 0; i < TEST_MAX; i++)
+		{
+			InterlockedDecrement64(&(pDataArray[i]->Data));
+			InterlockedDecrement64(&(pDataArray[i]->Count));
+		}
+		Sleep(10);
+		for (auto i = 0; i < TEST_MAX; i++)
+		{
+			if (pDataArray[i]->Data == 0x00000000ffffffff && pDataArray[i]->Count == 0)
+				continue;
+			else
+				CCrashDump::Crash();
+		}
+		Sleep(10);
+		for (auto i = 0; i < TEST_MAX; i++)
+		{
+			g_LFStack.Push(pDataArray[i]);
+		}
+		Sleep(10);
 
+	}
+	return 0;
+}
 void main()
 {
 	g_Shutdown = false;
 	TestData ** pDataArray = new TestData *[TEST_MAX * THREAD_NUM];
 	ProfileInitial();
-	
-	for (auto i = 0; i < TEST_MAX * THREAD_NUM; i++)
-	{
-		pDataArray[i] = g_Pool.Alloc();
-		pDataArray[i]->Data = 0x00000000ffffffff;
-		pDataArray[i]->Count = 0;
-	}
+	int num = 0;
+	std::cout << "What's test ?" << std::endl;
+	std::cout << "1 : LockFreeMemoryPool" << std::endl;
+	std::cout << "2 : LockFreeStack" << std::endl;
+	std::cout << "3 : LockFreeQueue" << std::endl;
+	std::cin >> num;
 
-	for (auto i = 0; i < TEST_MAX * THREAD_NUM; i++)
+	switch (num)
 	{
-		g_Pool.Free(pDataArray[i]);
-	}
-
-	HANDLE hThread[THREAD_NUM];
-	for (auto i = 0; i < THREAD_NUM; i++)
+	case 1 :
 	{
-		hThread[i] = (HANDLE)_beginthreadex(NULL, 0, &ThreadF, (void*)rand(), 0, NULL);
-	}
-
-	while (!g_Shutdown)
-	{
-		Sleep(1000);
-		printf("MemoryPool AllocCount %lu \t MemoryPool UseCount %lu\n", g_Pool.GetAllocCount(), g_Pool.GetUseCount());
-		
-		if (_kbhit())
+		for (auto i = 0; i < TEST_MAX * THREAD_NUM; i++)
 		{
-			int input = _getch();
-			if (input == 'q' || input == 'Q')
-				g_Shutdown = true;
+			pDataArray[i] = g_Pool.Alloc();
+			pDataArray[i]->Data = 0x00000000ffffffff;
+			pDataArray[i]->Count = 0;
+		}
 
-			if (input == 's')
+		for (auto i = 0; i < TEST_MAX * THREAD_NUM; i++)
+		{
+			g_Pool.Free(pDataArray[i]);
+		}
+
+		HANDLE hThread[THREAD_NUM];
+		for (auto i = 0; i < THREAD_NUM; i++)
+		{
+			hThread[i] = (HANDLE)_beginthreadex(NULL, 0, &MemoryPool_Test, (void*)rand(), 0, NULL);
+		}
+		while (!g_Shutdown)
+		{
+			Sleep(1000);
+			printf("MemoryPool AllocCount %lu \t MemoryPool UseCount %lu\n", g_Pool.GetAllocCount(), g_Pool.GetUseCount());
+
+			if (_kbhit())
 			{
-				ProfileOutTextInit("MemoryPool_Test");
-				ProfileDataOutText("MemoryPool_Test");
+				int input = _getch();
+				if (input == 'q' || input == 'Q')
+					g_Shutdown = true;
+
+				if (input == 's')
+				{
+					ProfileOutTextInit("MemoryPool_Test");
+					ProfileDataOutText("MemoryPool_Test");
+				}
 			}
 		}
+		WaitForMultipleObjects(10, hThread, true, INFINITE);
 	}
-	WaitForMultipleObjects(10, hThread, true, INFINITE);
+	break;
+	case 2 :
+	{
+		for (auto i = 0; i < TEST_MAX * THREAD_NUM; i++)
+		{
+			pDataArray[i] = g_Pool.Alloc();
+			pDataArray[i]->Data = 0x00000000ffffffff;
+			pDataArray[i]->Count = 0;
+			g_LFStack.Push(pDataArray[i]);
+		}
+
+		HANDLE hThread[THREAD_NUM];
+		for (auto i = 0; i < THREAD_NUM; i++)
+		{
+			hThread[i] = (HANDLE)_beginthreadex(NULL, 0, &LFStack_Test, (void*)rand(), 0, NULL);
+		}
+
+		while (!g_Shutdown)
+		{
+			Sleep(1000);
+			printf("M_Pool AllocCount %lu   M_Pool UseCount %lu \t Stack AllocCount %lu\n", g_LFStack.GetStackMemoryPoolAllocCount(), g_LFStack.GetStackMemoryPoolUseCount(), g_LFStack.GetStackUseCount());
+
+			if (_kbhit())
+			{
+				int input = _getch();
+				if (input == 'q' || input == 'Q')
+					g_Shutdown = true;
+
+				if (input == 's')
+				{
+					ProfileOutTextInit("LFStack_Test");
+					ProfileDataOutText("LFStack_Test");
+				}
+			}
+		}
+		WaitForMultipleObjects(10, hThread, true, INFINITE);
+	}
+	break;
+	case 3:
+	{
+
+	}
+	break;
+	default:
+		std::cout << "Wrong Number Input" << std::endl;
+		break;
+	}
 }
