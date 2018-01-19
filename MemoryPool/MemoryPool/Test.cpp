@@ -21,7 +21,7 @@ bool	g_Shutdown = false;
 
 CMemoryPool<TestData> g_Pool;
 CLockfreeStack<TestData*> g_LFStack;
-//	CLockfreeQueue<TestData*> g_LFQueue;
+CLockfreeQueue<TestData*> g_LFQueue;
 
 
 unsigned __stdcall MemoryPool_Test(void * Param)
@@ -134,6 +134,61 @@ unsigned __stdcall LFStack_Test(void * Param)
 	}
 	return 0;
 }
+unsigned __stdcall LFQueue_Test(void * Param)
+{
+	TestData * pDataArray[TEST_MAX];
+	while (!g_Shutdown)
+	{
+		for (auto i = 0; i < TEST_MAX; i++)
+		{
+			g_LFQueue.Dequeue(pDataArray[i]);
+		}
+		Sleep(10);
+		for (auto i = 0; i < TEST_MAX; i++)
+		{
+			if (pDataArray[i]->Data == 0x00000000ffffffff && pDataArray[i]->Count == 0)
+				continue;
+			else
+				CCrashDump::Crash();
+		}
+		Sleep(10);
+		for (auto i = 0; i < TEST_MAX; i++)
+		{
+			InterlockedIncrement64(&(pDataArray[i]->Data));
+			InterlockedIncrement64(&(pDataArray[i]->Count));
+		}
+		Sleep(10);
+		for (auto i = 0; i < TEST_MAX; i++)
+		{
+			if (pDataArray[i]->Data == 0x0000000100000000 && pDataArray[i]->Count == 1)
+				continue;
+			else
+				CCrashDump::Crash();
+		}
+		Sleep(10);
+		for (auto i = 0; i < TEST_MAX; i++)
+		{
+			InterlockedDecrement64(&(pDataArray[i]->Data));
+			InterlockedDecrement64(&(pDataArray[i]->Count));
+		}
+		Sleep(10);
+		for (auto i = 0; i < TEST_MAX; i++)
+		{
+			if (pDataArray[i]->Data == 0x00000000ffffffff && pDataArray[i]->Count == 0)
+				continue;
+			else
+				CCrashDump::Crash();
+		}
+		Sleep(10);
+		for (auto i = 0; i < TEST_MAX; i++)
+		{
+			g_LFQueue.Enqueue(pDataArray[i]);
+		}
+		Sleep(10);
+
+	}
+	return 0;
+}
 void main()
 {
 	g_Shutdown = false;
@@ -227,7 +282,39 @@ void main()
 	break;
 	case 3:
 	{
+		for (auto i = 0; i < TEST_MAX * THREAD_NUM; i++)
+		{
+			pDataArray[i] = g_Pool.Alloc();
+			pDataArray[i]->Data = 0x00000000ffffffff;
+			pDataArray[i]->Count = 0;
+			g_LFQueue.Enqueue(pDataArray[i]);
+		}
 
+		HANDLE hThread[THREAD_NUM];
+		for (auto i = 0; i < THREAD_NUM; i++)
+		{
+			hThread[i] = (HANDLE)_beginthreadex(NULL, 0, &LFQueue_Test, (void*)rand(), 0, NULL);
+		}
+
+		while (!g_Shutdown)
+		{
+			Sleep(1000);
+			printf("M_Pool AllocCount %lu   M_Pool UseCount %lu \t Stack AllocCount %lu\n", g_LFQueue.GetQueueMemoryPoolAllocCount(), g_LFQueue.GetQueueMemoryPoolUseCount(), g_LFQueue.GetQueueUseCount());
+
+			if (_kbhit())
+			{
+				int input = _getch();
+				if (input == 'q' || input == 'Q')
+					g_Shutdown = true;
+
+				if (input == 's')
+				{
+					ProfileOutTextInit("LFStack_Test");
+					ProfileDataOutText("LFStack_Test");
+				}
+			}
+		}
+		WaitForMultipleObjects(10, hThread, true, INFINITE);
 	}
 	break;
 	default:

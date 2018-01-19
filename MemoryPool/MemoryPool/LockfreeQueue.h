@@ -2,7 +2,7 @@
 #include "MemoryPool.h"
 
 template <class DATA>
-class CLockFreeQueue
+class CLockfreeQueue
 {
 private:
 	typedef struct st_MemoryBlock
@@ -12,7 +12,7 @@ private:
 			pNextblock = nullptr;
 		}
 		st_MemoryBlock * pNextblock;
-		Data data;
+		DATA data;
 	}BLOCK;
 
 	typedef struct st_FreeNode
@@ -22,13 +22,14 @@ private:
 	}TOP;
 
 public:
-	CLockFreeQueue()
+	CLockfreeQueue()
 	{
 		_queueusecount = 0;
 		_queuememorypool = new CMemoryPool<BLOCK>;
 
 		_pHead = (TOP*)_aligned_malloc(sizeof(TOP), 16);
 		_pHead->pTopnode = _queuememorypool->Alloc();
+		_pHead->pTopnode->pNextblock = nullptr;
 		_pHead->uniquenum = 0;
 
 		_pTail = (TOP*)_aligned_malloc(sizeof(TOP), 16);
@@ -36,7 +37,7 @@ public:
 		_pTail->uniquenum = 0;
 	}
 
-	virtual ~CLockFreeQueue()
+	virtual ~CLockfreeQueue()
 	{
 		while (_pHead->pTopnode != _pTail->pTopnode)
 		{
@@ -53,12 +54,52 @@ public:
 
 	void Enqueue(DATA InData)
 	{
+		TOP curtail;
+		TOP newtail;
+		BLOCK * pNode = _queuememorypool->Alloc();
+		pNode->pNextblock = nullptr;
+		pNode->data = InData;
 
+		newtail.uniquenum = InterlockedIncrement64(&(_pTail->uniquenum));
+		newtail.pTopnode = pNode;
+
+		do
+		{
+			curtail.uniquenum = _pTail->uniquenum;
+			curtail.pTopnode = _pTail->pTopnode;
+
+			curtail.pTopnode->pNextblock = newtail.pTopnode;
+		} while (!InterlockedCompareExchange128((volatile LONG64*)_pTail,
+			(LONG64)newtail.uniquenum, (LONG64)newtail.pTopnode, (LONG64*)&curtail));
+		InterlockedIncrement64(&_queueusecount);
+		return;
 	}
 
 	bool Dequeue(DATA &OutData)
 	{
+		if (InterlockedDecrement64(&_queueusecount) < 0)
+		{
+			InterlockedIncrement64(&_queueusecount);
+			OutData = nullptr;
+			return false;
+		}
 
+		if (_pHead == _pTail && _pTail->pTopnode->pNextblock != nullptr)
+		{
+			InterlockedCompareExchangePointer((PVOID*)&_pTail,
+				_pTail->pTopnode->pNextblock, _pTail);
+		}
+			
+		TOP curhead;
+		TOP newhead;
+		newhead.uniquenum = InterlockedIncrement64(&(_pHead->uniquenum));
+	
+		do
+		{
+
+		} while ();
+		_queuememorypool->Free(head.pTopnode);
+		return true;
 	}
 
 	LONG64 GetQueueUseCount() { return _queueusecount; }

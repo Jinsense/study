@@ -68,21 +68,19 @@ public:
 		return;
 	}
 
-	void Pop(DATA &OutData)
+	bool Pop(DATA &OutData)
 	{
 		if (InterlockedDecrement64(&_stackusecount) < 0)
 		{
 			InterlockedIncrement64(&_stackusecount);
 			OutData = nullptr;
-			return;
+			return false;
 		}
 		else
 		{
 			TOP curtop;
 			TOP newtop;
-			LONG64 key = InterlockedIncrement64(&(_pTop->uniquenum));
-
-			newtop.uniquenum = key;
+			newtop.uniquenum = InterlockedIncrement64(&(_pTop->uniquenum));
 
 			do
 			{
@@ -95,7 +93,7 @@ public:
 			OutData = curtop.pTopnode->data;
 			_stackmemorypool->Free(curtop.pTopnode);
 
-			return;
+			return true;
 		}
 	}
 
