@@ -1,7 +1,8 @@
 #pragma once
+#include <iostream>
 #include <vector>
 
-void SelectionSort(vector<int> v)
+void SelectionSort(std::vector<int> v)
 {
 	for (int i = 0; i < v.size() - 1; i++)
 	{
