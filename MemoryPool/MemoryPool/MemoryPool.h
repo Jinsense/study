@@ -7,6 +7,10 @@ class CMemoryPool
 private:
 	typedef struct st_MemoryBlock
 	{
+		st_MemoryBlock()
+		{
+			pNextblock = nullptr;
+		}
 		st_MemoryBlock * pNextblock;
 		DATA data;
 	}BLOCK;

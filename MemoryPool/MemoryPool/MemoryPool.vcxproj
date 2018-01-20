@@ -145,6 +145,8 @@
   <ItemGroup>
     <ClInclude Include="APIHook.h" />
     <ClInclude Include="CDump.h" />
+    <ClInclude Include="LockfreeQueue.h" />
+    <ClInclude Include="LockfreeStack.h" />
     <ClInclude Include="MemoryPool.h" />
     <ClInclude Include="Profiling.h" />
   </ItemGroup>
