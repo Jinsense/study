@@ -77,17 +77,15 @@ public:
 	{
 		TOP curtop;
 		TOP newtop;
-		LONG64 key = InterlockedIncrement64(&(_pTop->uniquenum));
+		newtop.uniquenum = InterlockedIncrement64(&(_pTop->uniquenum));
 		do
 		{
 			curtop.uniquenum = _pTop->uniquenum;
 			curtop.pTopnode = _pTop->pTopnode;
 
-			newtop.uniquenum = key;
 			newtop.pTopnode = (BLOCK*)((char*)pInData - sizeof(BLOCK*));
 
 			newtop.pTopnode->pNextblock = curtop.pTopnode;
-
 		} while (!InterlockedCompareExchange128((volatile LONG64*)_pTop,
 			(LONG64)newtop.uniquenum, (LONG64)newtop.pTopnode, (LONG64*)&curtop));
 		InterlockedDecrement64(&_usecount);

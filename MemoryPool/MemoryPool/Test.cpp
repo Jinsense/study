@@ -299,7 +299,7 @@ void main()
 		while (!g_Shutdown)
 		{
 			Sleep(1000);
-			printf("M_Pool AllocCount %lu   M_Pool UseCount %lu \t Stack AllocCount %lu\n", g_LFQueue.GetQueueMemoryPoolAllocCount(), g_LFQueue.GetQueueMemoryPoolUseCount(), g_LFQueue.GetQueueUseCount());
+			printf("M_Pool AllocCount %lu   M_Pool UseCount %lu \t Queue AllocCount %lu\n", g_LFQueue.GetQueueMemoryPoolAllocCount(), g_LFQueue.GetQueueMemoryPoolUseCount(), g_LFQueue.GetQueueUseCount());
 
 			if (_kbhit())
 			{

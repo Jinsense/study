@@ -50,10 +50,8 @@ public:
 		new (pNewnode) BLOCK();
 		TOP curtop;
 		TOP newtop;
-		LONG64 key = InterlockedIncrement64(&(_pTop->uniquenum));
-		
+		newtop.uniquenum = InterlockedIncrement64(&(_pTop->uniquenum));
 		newtop.pTopnode = pNewnode;
-		newtop.uniquenum = key;
 		pNewnode->data = InData;
 
 		do
