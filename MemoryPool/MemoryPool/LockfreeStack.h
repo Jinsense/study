@@ -48,19 +48,18 @@ public:
 	{
 		BLOCK * pNewnode = _stackmemorypool->Alloc();
 		new (pNewnode) BLOCK();
-		pNewnode->data = InData;
-
 		TOP curtop;
 		TOP newtop;
 		LONG64 key = InterlockedIncrement64(&(_pTop->uniquenum));
+
+		newtop.pTopnode = pNewnode;
+		newtop.uniquenum = key;
+		pNewnode->data = InData;
 
 		do
 		{
 			curtop.uniquenum = _pTop->uniquenum;
 			curtop.pTopnode = _pTop->pTopnode;
-
-			newtop.uniquenum = key;
-			newtop.pTopnode = pNewnode;
 
 			newtop.pTopnode->pNextblock = curtop.pTopnode;
 		} while (!InterlockedCompareExchange128((volatile LONG64*)_pTop,
@@ -77,45 +76,25 @@ public:
 			OutData = nullptr;
 			return false;
 		}
-		
-		TOP curtop;
-		TOP newtop;
-		LONG64 key = InterlockedIncrement64(&(_pTop->uniquenum));
-
-		/*do
+		else
 		{
-			curtop.uniquenum = _pTop->uniquenum;
-			curtop.pTopnode = _pTop->pTopnode;
-	
-			newtop.uniquenum = key;
-			newtop.pTopnode = curtop.pTopnode->pNextblock;
-		} while (!InterlockedCompareExchange128((volatile LONG64*)_pTop,
-			newtop.uniquenum, (LONG64)newtop.pTopnode, (LONG64*)&curtop));
-		OutData = curtop.pTopnode->data;
-		_stackmemorypool->Free(curtop.pTopnode);
+			TOP curtop;
+			TOP newtop;
+			newtop.uniquenum = InterlockedIncrement64(&(_pTop->uniquenum));
 
-		return true;*/
-
-		while (1)
-		{
-			curtop.uniquenum = _pTop->uniquenum;
-			curtop.pTopnode = _pTop->pTopnode;
-
-			if (nullptr == curtop.pTopnode)
-				continue;
-
-			newtop.uniquenum = key;
-			newtop.pTopnode = curtop.pTopnode->pNextblock;
-
-			if (1 == InterlockedCompareExchange128((volatile LONG64*)_pTop,
-				newtop.uniquenum, (LONG64)newtop.pTopnode, (LONG64*)&curtop))
+			do
 			{
-				OutData = curtop.pTopnode->data;
-				_stackmemorypool->Free(curtop.pTopnode);
-				break;
-			}
+				curtop.uniquenum = _pTop->uniquenum;
+				curtop.pTopnode = _pTop->pTopnode;
+
+				newtop.pTopnode = curtop.pTopnode->pNextblock;
+			} while (!InterlockedCompareExchange128((volatile LONG64*)_pTop,
+				(LONG64)newtop.uniquenum, (LONG64)newtop.pTopnode, (LONG64*)&curtop));
+			OutData = curtop.pTopnode->data;
+			_stackmemorypool->Free(curtop.pTopnode);
+
+			return true;
 		}
-		return true;
 	}
 
 	LONG64 GetStackUseCount() { return _stackusecount; }

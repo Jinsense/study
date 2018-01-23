@@ -52,37 +52,6 @@ public:
 		delete _queuememorypool;
 	}
 
-	//void Enqueue(DATA InData)
-	//{
-	//	BLOCK * pNode = _queuememorypool->Alloc();
-	//	pNode->pNextblock = nullptr;
-	//	pNode->data = InData;
-
-	//	LONG64 key = InterlockedIncrement64(&(_pTail->uniquenum));
-	//	while (1)
-	//	{
-	//		TOP * pTail = _pTail;
-	//		BLOCK * pNext = pTail->pTopnode->pNextblock;
-
-	//		if (NULL == pNext)
-	//		{
-	//			if (nullptr == InterlockedCompareExchangePointer((PVOID*)&pTail->pTopnode->pNextblock,
-	//				pNode, pNext))
-	//			{
-	//				InterlockedCompareExchange128((LONG64*)_pTail, key, (LONG64)pNode, (LONG64*)pTail);
-	//				break;
-	//			}
-	//		}
-	//		else
-	//		{
-	//			InterlockedCompareExchange128((LONG64*)_pTail, pTail->uniquenum, 
-	//				(LONG64)pTail->pTopnode->pNextblock, (LONG64*)pTail);
-	//		}
-	//	}
-	//	InterlockedIncrement64(&_queueusecount);
-	//	return;
-	//}
-
 	void Enqueue(DATA InData)
 	{
 		BLOCK * pNode = _queuememorypool->Alloc();
