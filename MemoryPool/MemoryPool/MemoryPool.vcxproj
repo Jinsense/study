@@ -145,7 +145,7 @@
     <ClInclude Include="APIHook.h" />
     <ClInclude Include="CDump.h" />
     <ClInclude Include="LockfreeQueue.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="LockfreeStack.h" />
     <ClInclude Include="MemoryPool.h" />
