@@ -57,6 +57,24 @@ public:
 			TOP newtop;
 			DATA * pData;
 
+			/*while (1)
+			{
+				curtop.uniquenum = _pTop->uniquenum;
+				curtop.pTopnode = _pTop->pTopnode;
+
+				if (nullptr == curtop.pTopnode)
+					continue;
+
+				newtop.uniquenum = key;
+				newtop.pTopnode = curtop.pTopnode->pNextblock;
+
+				pData = &(curtop.pTopnode->data);
+
+				if (1 == InterlockedCompareExchange128((volatile LONG64*)_pTop,
+					(LONG64)newtop.uniquenum, (LONG64)newtop.pTopnode, (LONG64*)&curtop))
+					return pData;
+			}*/
+
 			do
 			{
 				curtop.uniquenum = _pTop->uniquenum;
@@ -77,17 +95,15 @@ public:
 	{
 		TOP curtop;
 		TOP newtop;
-		LONG64 key = InterlockedIncrement64(&(_pTop->uniquenum));
+		newtop.uniquenum = InterlockedIncrement64(&(_pTop->uniquenum));
 		do
 		{
 			curtop.uniquenum = _pTop->uniquenum;
 			curtop.pTopnode = _pTop->pTopnode;
 
-			newtop.uniquenum = key;
 			newtop.pTopnode = (BLOCK*)((char*)pInData - sizeof(BLOCK*));
 
 			newtop.pTopnode->pNextblock = curtop.pTopnode;
-
 		} while (!InterlockedCompareExchange128((volatile LONG64*)_pTop,
 			(LONG64)newtop.uniquenum, (LONG64)newtop.pTopnode, (LONG64*)&curtop));
 		InterlockedDecrement64(&_usecount);

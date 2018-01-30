@@ -51,7 +51,7 @@ public:
 		TOP curtop;
 		TOP newtop;
 		LONG64 key = InterlockedIncrement64(&(_pTop->uniquenum));
-		
+
 		newtop.pTopnode = pNewnode;
 		newtop.uniquenum = key;
 		pNewnode->data = InData;
@@ -88,7 +88,7 @@ public:
 				curtop.pTopnode = _pTop->pTopnode;
 
 				newtop.pTopnode = curtop.pTopnode->pNextblock;
-			}while(!InterlockedCompareExchange128((volatile LONG64*)_pTop,
+			} while (!InterlockedCompareExchange128((volatile LONG64*)_pTop,
 				(LONG64)newtop.uniquenum, (LONG64)newtop.pTopnode, (LONG64*)&curtop));
 			OutData = curtop.pTopnode->data;
 			_stackmemorypool->Free(curtop.pTopnode);

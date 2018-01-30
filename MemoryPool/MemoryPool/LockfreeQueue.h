@@ -54,23 +54,33 @@ public:
 
 	void Enqueue(DATA InData)
 	{
-		TOP curtail;
-		TOP newtail;
 		BLOCK * pNode = _queuememorypool->Alloc();
 		pNode->pNextblock = nullptr;
 		pNode->data = InData;
 
-		newtail.uniquenum = InterlockedIncrement64(&(_pTail->uniquenum));
-		newtail.pTopnode = pNode;
-
-		do
+		TOP tail;
+		tail.uniquenum = InterlockedIncrement64(&(_pTail->uniquenum));
+		while (1)
 		{
-			curtail.uniquenum = _pTail->uniquenum;
-			curtail.pTopnode = _pTail->pTopnode;
+			tail.pTopnode = _pTail->pTopnode;
+			BLOCK * pNext = tail.pTopnode->pNextblock;
 
-			curtail.pTopnode->pNextblock = newtail.pTopnode;
-		} while (!InterlockedCompareExchange128((volatile LONG64*)_pTail,
-			(LONG64)newtail.uniquenum, (LONG64)newtail.pTopnode, (LONG64*)&curtail));
+			if (NULL == pNext)
+			{
+				if (nullptr == InterlockedCompareExchangePointer((PVOID*)&tail.pTopnode->pNextblock,
+					pNode, pNext))
+				{
+					InterlockedCompareExchange128((LONG64*)_pTail, tail.uniquenum, 
+						(LONG64)pNode, (LONG64*)&tail);
+					break;
+				}
+			}
+			else
+			{
+				InterlockedCompareExchange128((LONG64*)_pTail, tail.uniquenum,
+					(LONG64)tail.pTopnode->pNextblock, (LONG64*)&tail);
+			}
+		}
 		InterlockedIncrement64(&_queueusecount);
 		return;
 	}
@@ -84,21 +94,32 @@ public:
 			return false;
 		}
 
-		if (_pHead == _pTail && _pTail->pTopnode->pNextblock != nullptr)
+		TOP head;
+		TOP tail;
+		head.uniquenum = InterlockedIncrement64(&(_pHead->uniquenum));
+		while (1)
 		{
-			InterlockedCompareExchangePointer((PVOID*)&_pTail,
-				_pTail->pTopnode->pNextblock, _pTail);
-		}
+			head.pTopnode = _pHead->pTopnode;
+			tail.pTopnode = _pTail->pTopnode;
+			BLOCK * pNode = head.pTopnode->pNextblock;
+			if (nullptr == pNode)
+				continue;
 			
-		TOP curhead;
-		TOP newhead;
-		newhead.uniquenum = InterlockedIncrement64(&(_pHead->uniquenum));
-	
-		do
-		{
+			if(head.pTopnode == tail.pTopnode)
+			{
+				if (0 == InterlockedCompareExchange128((LONG64*)_pTail, tail.uniquenum,
+					(LONG64)tail.pTopnode->pNextblock, (LONG64*)&tail))
+					continue;
+			}
 
-		} while ();
-		_queuememorypool->Free(head.pTopnode);
+			OutData = pNode->data;
+			if (1 == InterlockedCompareExchange128((LONG64*)_pHead, head.uniquenum,
+				(LONG64)head.pTopnode->pNextblock, (LONG64*)&head))
+			{
+				_queuememorypool->Free(head.pTopnode);
+				break;
+			}
+		}
 		return true;
 	}
 
