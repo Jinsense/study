@@ -1,5 +1,6 @@
 #pragma once
-#include "MemoryPool.h"
+//#include "MemoryPool.h"
+#include "CharServer_MemoryPool.h"
 
 template <class DATA>
 class CLockfreeQueue

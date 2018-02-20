@@ -1,6 +1,7 @@
 #include <iostream>
 #include <conio.h>
-#include "MemoryPool.h"
+//	#include "MemoryPool.h"
+#include "CharServer_MemoryPool.h"
 #include "LockfreeStack.h"
 #include "LockfreeQueue.h"
 #include "CDump.h"
@@ -19,7 +20,8 @@ struct TestData
 
 bool	g_Shutdown = false;
 
-CMemoryPool<TestData> g_Pool;
+//CMemoryPool<TestData> g_Pool;
+CMemoryPoolTLS<TestData> g_Pool;
 CLockfreeStack<TestData*> g_LFStack;
 CLockfreeQueue<TestData*> g_LFQueue;
 

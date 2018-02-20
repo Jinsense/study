@@ -44,7 +44,8 @@ public:
 
 	DATA * Alloc()
 	{
-		if (InterlockedIncrement64(&_usecount) > _alloccount)
+		LONG64 alloc = _alloccount;
+		if (InterlockedIncrement64(&_usecount) > alloc)
 		{
 			InterlockedIncrement64(&_alloccount);
 			BLOCK * pBlock = (BLOCK*)malloc(sizeof(BLOCK));

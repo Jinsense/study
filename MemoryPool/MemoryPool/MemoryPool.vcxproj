@@ -145,6 +145,7 @@
   <ItemGroup>
     <ClInclude Include="APIHook.h" />
     <ClInclude Include="CDump.h" />
+    <ClInclude Include="CharServer_MemoryPool.h" />
     <ClInclude Include="LockfreeQueue.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClInclude>
