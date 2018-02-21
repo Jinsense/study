@@ -9,7 +9,7 @@
 
 
 #define		TEST_MAX	10000
-#define		THREAD_NUM	10
+#define		THREAD_NUM	4
 
 struct TestData
 {
@@ -31,9 +31,12 @@ unsigned __stdcall MemoryPool_Test(void * Param)
 	TestData * pDataArray[TEST_MAX];
 	while (!g_Shutdown)
 	{
+//		printf("ThreadID %d \n", GetCurrentThreadId());
 		for (auto i = 0; i < TEST_MAX; i++)
 		{
-			pDataArray[i] = g_Pool.Alloc();		
+			Begin("MemoryPoolTLS");
+			pDataArray[i] = g_Pool.Alloc();	
+			End("MemoryPoolTLS");
 		}
 		Sleep(10);
 		for (auto i = 0; i < TEST_MAX; i++)
@@ -195,7 +198,7 @@ void main()
 {
 	g_Shutdown = false;
 	TestData ** pDataArray = new TestData *[TEST_MAX * THREAD_NUM];
-	ProfileInitial();
+//	ProfileInitial();
 	int num = 0;
 	std::cout << "What's test ?" << std::endl;
 	std::cout << "1 : LockFreeMemoryPool" << std::endl;
@@ -209,7 +212,9 @@ void main()
 	{
 		for (auto i = 0; i < TEST_MAX * THREAD_NUM; i++)
 		{
+//			Begin("MemoryPoolTLS");
 			pDataArray[i] = g_Pool.Alloc();
+//			End("MemoryPoolTLS");
 			pDataArray[i]->Data = 0x00000000ffffffff;
 			pDataArray[i]->Count = 0;
 		}
@@ -227,7 +232,7 @@ void main()
 		while (!g_Shutdown)
 		{
 			Sleep(1000);
-			printf("MemoryPool AllocCount %lu \t MemoryPool UseCount %lu\n", g_Pool.GetAllocCount(), g_Pool.GetUseCount());
+//			printf("MemoryPool AllocCount %lu \t MemoryPool UseCount %lu\n", g_Pool.GetAllocCount(), g_Pool.GetUseCount());
 
 			if (_kbhit())
 			{
@@ -237,8 +242,9 @@ void main()
 
 				if (input == 's')
 				{
-					ProfileOutTextInit("MemoryPool_Test");
-					ProfileDataOutText("MemoryPool_Test");
+					ProfileSave();
+//					ProfileOutTextInit("MemoryPool_Test");
+//					ProfileDataOutText("MemoryPool_Test");
 				}
 			}
 		}
@@ -274,8 +280,8 @@ void main()
 
 				if (input == 's')
 				{
-					ProfileOutTextInit("LFStack_Test");
-					ProfileDataOutText("LFStack_Test");
+//					ProfileOutTextInit("LFStack_Test");
+//					ProfileDataOutText("LFStack_Test");
 				}
 			}
 		}
@@ -311,8 +317,8 @@ void main()
 
 				if (input == 's')
 				{
-					ProfileOutTextInit("LFStack_Test");
-					ProfileDataOutText("LFStack_Test");
+//					ProfileOutTextInit("LFStack_Test");
+//					ProfileDataOutText("LFStack_Test");
 				}
 			}
 		}

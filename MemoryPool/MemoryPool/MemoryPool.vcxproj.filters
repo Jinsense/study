@@ -24,9 +24,6 @@
     <ClInclude Include="CDump.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="Profiling.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="LockfreeStack.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -34,6 +31,12 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="CharServer_MemoryPool.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Profiling_My.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Profiling.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
@@ -44,7 +47,7 @@
     <ClCompile Include="APIHook.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Profiling.cpp">
+    <ClCompile Include="Profiling_My.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
