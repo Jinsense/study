@@ -233,6 +233,7 @@ void main()
 		{
 			Sleep(1000);
 //			printf("MemoryPool AllocCount %lu \t MemoryPool UseCount %lu\n", g_Pool.GetAllocCount(), g_Pool.GetUseCount());
+			printf("MemoryPool AllocCount %lu \n", g_Pool.GetAllocCount());
 
 			if (_kbhit())
 			{
@@ -242,6 +243,7 @@ void main()
 
 				if (input == 's')
 				{
+					printf("Profile Text Save\n");
 					ProfileSave();
 //					ProfileOutTextInit("MemoryPool_Test");
 //					ProfileDataOutText("MemoryPool_Test");

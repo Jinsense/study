@@ -198,7 +198,7 @@ public:
 	{
 		_pMemPool = new CMemoryPool<CChunk>;
 		_TLSIndex = TlsAlloc();
-		//		_UseCount = 0;
+//		_UseCount = 0;
 		_AllocCount = 0;
 	}
 	~CMemoryPoolTLS()
@@ -208,7 +208,7 @@ public:
 
 	inline Type *Alloc()
 	{
-		//		InterlockedIncrement(&_UseCount);
+//		InterlockedIncrement(&_UseCount);
 
 		CChunk *pChunk;
 
