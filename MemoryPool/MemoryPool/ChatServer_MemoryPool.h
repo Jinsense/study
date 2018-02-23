@@ -170,15 +170,16 @@ private:
 			_FreeCount = eNUM_CHUNKBLOCK;
 		}
 
-		Type *Alloc()
+		inline Type *Alloc()
 		{
-			InterlockedDecrement(&_AllocCount);
+//			InterlockedDecrement(&_AllocCount);
+			_AllocCount--;
 			st_NODE *pTemp = _pTop;
 			_pTop = _pTop->pNext;
 			return &pTemp->Data;
 		}
 
-		long Free()
+		inline long Free()
 		{
 			return InterlockedDecrement(&_FreeCount);
 		}
@@ -205,7 +206,7 @@ public:
 		TlsFree(_TLSIndex);
 	}
 
-	Type *Alloc()
+	inline Type *Alloc()
 	{
 		//		InterlockedIncrement(&_UseCount);
 
@@ -230,7 +231,7 @@ public:
 		return pPacket;
 	}
 
-	void Free(Type *pData)
+	inline void Free(Type *pData)
 	{
 		//		InterlockedDecrement(&_UseCount);
 

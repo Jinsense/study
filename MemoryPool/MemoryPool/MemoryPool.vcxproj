@@ -134,6 +134,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <ConformanceMode>false</ConformanceMode>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -147,7 +148,7 @@
   <ItemGroup>
     <ClInclude Include="APIHook.h" />
     <ClInclude Include="CDump.h" />
-    <ClInclude Include="CharServer_MemoryPool.h" />
+    <ClInclude Include="ChatServer_MemoryPool.h" />
     <ClInclude Include="LockfreeQueue.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClInclude>
@@ -159,7 +160,10 @@
   <ItemGroup>
     <ClCompile Include="APIHook.cpp" />
     <ClCompile Include="Profiling_My.cpp" />
-    <ClCompile Include="Test.cpp" />
+    <ClCompile Include="Test.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="소스.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

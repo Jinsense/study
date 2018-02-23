@@ -1,7 +1,7 @@
 #include <iostream>
 #include <conio.h>
 //	#include "MemoryPool.h"
-#include "CharServer_MemoryPool.h"
+#include "ChatServer_MemoryPool.h"
 #include "LockfreeStack.h"
 #include "LockfreeQueue.h"
 #include "CDump.h"
